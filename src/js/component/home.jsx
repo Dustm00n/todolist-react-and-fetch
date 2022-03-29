@@ -1,24 +1,96 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 
-//include images into your bundle
-import rigoImage from "../../img/rigo-baby.jpg";
-
-//create your first component
 const Home = () => {
+	const [newItem, setNewItem] = useState("");
+	const [todos, setTodos] = useState([]);
+
+	useEffect(() => {
+		getTodos();
+	}, [newItem]);
+
+	const sendTodos = async (result) => {
+		const response = await fetch(
+			"https://assets.breatheco.de/apis/fake/todos/user/gerardoserrano",
+			{
+				method: "PUT",
+				body: JSON.stringify(result),
+				headers: {
+					"Content-Type": "application/json",
+				},
+			}
+		);
+		const data = await response.json();
+		console.log(data);
+	};
+	const getTodos = async () => {
+		const response = await fetch(
+			"https://assets.breatheco.de/apis/fake/todos/user/gerardoserrano",
+			{
+				method: "GET",
+				headers: {
+					"Content-Type": "application/json",
+				},
+			}
+		);
+		const data = await response.json();
+		setTodos(data);
+	};
+
+	const deleteItem = (ind) => {
+		const newArray = todos.filter((element, index) => index !== ind);
+		setTodos(newArray);
+		sendTodos(newArray);
+	};
+
+	const addTodo = (e) => {
+		if (newItem === "") {
+			return;
+		}
+		if (e.key === "Enter") {
+			const task = {
+				label: newItem,
+				done: false,
+			};
+			sendTodos([...todos, task]);
+			setNewItem("");
+		}
+	};
 	return (
-		<div>
-			<h1 className="text-center mt-5">Hello Rigo!</h1>
-			<p>
-				<img src={rigoImage} />
-			</p>
-			<a href="#" className="btn btn-success">
-				If you see this green button... bootstrap is working...
-			</a>
-			<p>
-				Made by{" "}
-				<a href="http://www.4geeksacademy.com">4Geeks Academy</a>, with
-				love!
-			</p>
+		<div className="main-container">
+			<h1 className="text-center mt-5">TODOS</h1>
+			<div className="card-of-list">
+				<input
+					type="text"
+					className="add-todo"
+					placeholder="Add a new todo"
+					onChange={(e) => {
+						setNewItem(e.target.value);
+					}}
+					value={newItem}
+					onKeyPress={(e) => addTodo(e)}
+				/>
+				<ul className="group-list">
+					{Array.isArray(todos) &&
+						todos !== undefined &&
+						todos?.map((task, index) => {
+							return (
+								<li className="items" key={index}>
+									{task.label}
+									<button
+										className="delete-item"
+										onClick={() => {
+											deleteItem(index);
+										}}>
+										X
+									</button>
+								</li>
+							);
+						})}
+				</ul>
+				<h5>{`${
+					Array.isArray(todos) && todos !== undefined && todos.length
+				} items left`}</h5>
+			</div>
 		</div>
 	);
 };
